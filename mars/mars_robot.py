@@ -7,12 +7,22 @@ from exceptions.robot_exceptions import (
     InstructionUnknownException,
     InstructionEmptyException,
     RobotOutOfBound,
+    InputProcessingException,
 )
 
 
 class Robot:
-    @staticmethod
-    def compute_orders(instructions: dict) -> str:
+    def _process_input(self, instructions):
+        self.map_top_right_x, self.map_top_right_y = instructions[
+            "map_top_right"
+        ].split()
+        self.current_pos = instructions["current_pos"].split()
+        self.orders = instructions["orders"].split()
+
+        self.current_direction = self.current_pos[2]
+        self.current_position = (int(self.current_pos[0]), int(self.current_pos[1]))
+
+    def compute_orders(self, instructions: dict) -> str:
         """
         Calculates robot final co-ordinates and heading.
 
@@ -25,37 +35,48 @@ class Robot:
         Returns:
             - Robot's final co-ordinates and heading
         """
-        map_top_right_x, map_top_right_y = instructions["map_top_right"].split()
-
-        current_pos = instructions["current_pos"].split()
-        orders = instructions["orders"].split()
-
-        current_direction = current_pos[2]
-        current_position = (int(current_pos[0]), int(current_pos[1]))
+        try:
+            self._process_input(instructions)
+        except Exception as error:
+            raise InputProcessingException(f"Error parsing input - {error}") from error
 
         if not instructions:
             raise InstructionEmptyException("Instructions empty.")
 
-        if any(instruction not in POSSIBLE_INSTRUCTIONS for instruction in orders):
+        if any(instruction not in POSSIBLE_INSTRUCTIONS for instruction in self.orders):
             raise InstructionUnknownException("Received unknown robot order.")
 
-        for instruction in orders:
+        for instruction in self.orders:
             if instruction == "M":
-                if current_direction == "N":
-                    current_position = (current_position[0], current_position[1] + 1)
-                elif current_direction == "S":
-                    current_position = (current_position[0], current_position[1] - 1)
-                elif current_direction == "E":
-                    current_position = (current_position[0] + 1, current_position[1])
-                elif current_direction == "W":
-                    current_position = (current_position[0] - 1, current_position[1])
+                if self.current_direction == "N":
+                    self.current_position = (
+                        self.current_position[0],
+                        self.current_position[1] + 1,
+                    )
+                elif self.current_direction == "S":
+                    self.current_position = (
+                        self.current_position[0],
+                        self.current_position[1] - 1,
+                    )
+                elif self.current_direction == "E":
+                    self.current_position = (
+                        self.current_position[0] + 1,
+                        self.current_position[1],
+                    )
+                elif self.current_direction == "W":
+                    self.current_position = (
+                        self.current_position[0] - 1,
+                        self.current_position[1],
+                    )
             elif instruction == "L":
-                current_direction = MAP_DIRECTIONS_LEFT.get(current_direction)
+                self.current_direction = MAP_DIRECTIONS_LEFT.get(self.current_direction)
             else:
-                current_direction = MAP_DIRECTIONS_RIGHT.get(current_direction)
+                self.current_direction = MAP_DIRECTIONS_RIGHT.get(
+                    self.current_direction
+                )
 
-            if current_position[0] > int(map_top_right_x) or current_position[1] > int(
-                map_top_right_y
-            ):
+            if self.current_position[0] > int(
+                self.map_top_right_x
+            ) or self.current_position[1] > int(self.map_top_right_y):
                 raise RobotOutOfBound("Robot is out of plateau !!!")
-        return f"{current_position[0]} {current_position[1]} {current_direction}"
+        return f"{self.current_position[0]} {self.current_position[1]} {self.current_direction}"

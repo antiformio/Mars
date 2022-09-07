@@ -15,3 +15,7 @@ class InstructionEmptyException(RobotException):
 
 class RobotOutOfBound(RobotException):
     pass
+
+
+class InputProcessingException(RobotException):
+    pass

@@ -1,6 +1,7 @@
 from auxiliary.aux import (
-    MAP_DIRECTIONS_LEFT,
-    MAP_DIRECTIONS_RIGHT,
+    # MAP_DIRECTIONS_LEFT,
+    # MAP_DIRECTIONS_RIGHT,
+    MAP_INPUT_DIRECTION_TO_COORDINATES,
     POSSIBLE_INSTRUCTIONS,
 )
 from exceptions.robot_exceptions import (
@@ -19,7 +20,7 @@ class Robot:
         self.current_pos = instructions["current_pos"].split()
         self.orders = instructions["orders"].split()
 
-        self.current_direction = self.current_pos[2]
+        self.current_direction = MAP_INPUT_DIRECTION_TO_COORDINATES.get(self.current_pos[2])
         self.current_position = (int(self.current_pos[0]), int(self.current_pos[1]))
 
     def compute_orders(self, instructions: dict) -> str:
@@ -48,35 +49,21 @@ class Robot:
 
         for instruction in self.orders:
             if instruction == "M":
-                if self.current_direction == "N":
-                    self.current_position = (
-                        self.current_position[0],
-                        self.current_position[1] + 1,
-                    )
-                elif self.current_direction == "S":
-                    self.current_position = (
-                        self.current_position[0],
-                        self.current_position[1] - 1,
-                    )
-                elif self.current_direction == "E":
-                    self.current_position = (
-                        self.current_position[0] + 1,
-                        self.current_position[1],
-                    )
-                elif self.current_direction == "W":
-                    self.current_position = (
-                        self.current_position[0] - 1,
-                        self.current_position[1],
-                    )
+                self.current_position = (self.current_position[0] + self.current_direction[0], 
+                                         self.current_position[1] + self.current_direction[1])
             elif instruction == "L":
-                self.current_direction = MAP_DIRECTIONS_LEFT.get(self.current_direction)
+                # A left rotation is equivalent of: direction_x, direction_y = -direction_y, direction_x
+                self.current_direction[0], self.current_direction[1] = -self.current_direction[1], \
+                                                                       self.current_direction[0]
             else:
-                self.current_direction = MAP_DIRECTIONS_RIGHT.get(
-                    self.current_direction
-                )
+                # A right rotation is equivalent of: direction_x, direction_y = direction_y, -direction_x
+                self.current_direction[0], self.current_direction[1] = self.current_direction[1], \
+                                                                       -self.current_direction[0]
+
 
             if self.current_position[0] > int(
                 self.map_top_right_x
             ) or self.current_position[1] > int(self.map_top_right_y):
                 raise RobotOutOfBound("Robot is out of plateau !!!")
-        return f"{self.current_position[0]} {self.current_position[1]} {self.current_direction}"
+        return f"{self.current_position[0]} {self.current_position[1]} " \
+               f"{[k for k,v in MAP_INPUT_DIRECTION_TO_COORDINATES.items() if v == self.current_direction][0]}"

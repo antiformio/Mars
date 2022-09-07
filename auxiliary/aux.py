@@ -1,3 +1,2 @@
-MAP_DIRECTIONS_LEFT = {"W": "S", "S": "E", "E": "N", "N": "W"}
-MAP_DIRECTIONS_RIGHT = {"W": "N", "N": "E", "E": "S", "S": "W"}
+MAP_INPUT_DIRECTION_TO_COORDINATES = {"W": [-1, 0], "S": [0, -1], "E": [1, 0], "N": [0, 1]}
 POSSIBLE_INSTRUCTIONS = ["M", "L", "R"]
